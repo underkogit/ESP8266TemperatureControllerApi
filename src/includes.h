@@ -7,6 +7,8 @@
 #include <ESP8266WebServer.h>
 #endif
 #include "sensor_hub.h"
+#include <WiFiUdp.h>
+#include <NTPClient.h>
 #include "WebServerWrapper.h"
-#include "HallSensor.h"
+#include "DateTimeProvider.h"
 #include "wifi_config.h"

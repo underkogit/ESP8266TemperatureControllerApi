@@ -219,112 +219,47 @@ SensorStatus SensorHub::getBMPStatus() const
     return status;
 }
 
-String SensorHub::toJson() const
+String SensorHub::toJson(String time) const
 {
 
     SensorReadings readings = const_cast<SensorHub *>(this)->readAll();
 
     JsonDocument doc;
 
-    if (_shtPresent)
-    {
-        if (!isnan(readings.shtTemperature))
-        {
-            doc["sht31"]["temperature"]["value"] = readings.shtTemperature;
-            doc["sht31"]["temperature"]["unit"] = "°C";
-        }
-        else
-        {
-            doc["sht31"]["temperature"]["error"] = "read failed";
-        }
-
-        if (!isnan(readings.shtHumidity))
-        {
-            doc["sht31"]["humidity"]["value"] = readings.shtHumidity;
-            doc["sht31"]["humidity"]["unit"] = "%";
-        }
-        else
-        {
-            doc["sht31"]["humidity"]["error"] = "read failed";
-        }
-    }
-    else
-    {
-        doc["sht31"]["error"] = "SHT31 not found";
-    }
-
-    if (_ahtPresent)
-    {
-        if (!isnan(readings.ahtTemperature))
-        {
-            doc["aht20"]["temperature"]["value"] = readings.ahtTemperature;
-            doc["aht20"]["temperature"]["unit"] = "°C";
-        }
-        else
-        {
-            doc["aht20"]["temperature"]["error"] = "read failed";
-        }
-
-        if (!isnan(readings.ahtHumidity))
-        {
-            doc["aht20"]["humidity"]["value"] = readings.ahtHumidity;
-            doc["aht20"]["humidity"]["unit"] = "%";
-        }
-        else
-        {
-            doc["aht20"]["humidity"]["error"] = "read failed";
-        }
-    }
-    else
-    {
-        doc["aht20"]["error"] = "AHT20 not found";
+#define SET_SENSOR(name, present, temp, hum, press)                       \
+    if (!present)                                                         \
+        doc["sensors"][name]["error"] = #name " not found";               \
+    else                                                                  \
+    {                                                                     \
+        if (!isnan(temp))                                                 \
+        {                                                                 \
+            doc["sensors"][name]["temperature"]["value"] = temp;          \
+            doc["sensors"][name]["temperature"]["unit"] = "°C";           \
+        }                                                                 \
+        else                                                              \
+            doc["sensors"][name]["temperature"]["error"] = "read failed"; \
+        if (!isnan(hum))                                                  \
+        {                                                                 \
+            doc["sensors"][name]["humidity"]["value"] = hum;              \
+            doc["sensors"][name]["humidity"]["unit"] = "%";               \
+        }                                                                 \
+        else                                                              \
+            doc["sensors"][name]["humidity"]["error"] = "read failed";    \
+        if (!isnan(press))                                                \
+        {                                                                 \
+            doc["sensors"][name]["pressure"]["value"] = press;            \
+            doc["sensors"][name]["pressure"]["unit"] = "гПа";             \
+        }                                                                 \
     }
 
-    if (_bmpPresent)
-    {
-        if (!isnan(readings.bmpTemperature))
-        {
-            doc["bmp280"]["temperature"]["value"] = readings.bmpTemperature;
-            doc["bmp280"]["temperature"]["unit"] = "°C";
-        }
-        else
-        {
-            doc["bmp280"]["temperature"]["error"] = "read failed";
-        }
+    SET_SENSOR("sht31", _shtPresent, readings.shtTemperature, readings.shtHumidity, NAN);
+    SET_SENSOR("aht20", _ahtPresent, readings.ahtTemperature, readings.ahtHumidity, NAN);
+    SET_SENSOR("bmp280", _bmpPresent, readings.bmpTemperature, NAN, readings.bmpPressure);
 
-        if (!isnan(readings.bmpPressure))
-        {
-            doc["bmp280"]["pressure"]["value"] = readings.bmpPressure;
-            doc["bmp280"]["pressure"]["unit"] = "гПа";
-        }
-        else
-        {
-            doc["bmp280"]["pressure"]["error"] = "read failed";
-        }
-    }
-    else
-    {
-        doc["bmp280"]["error"] = "BMP280 not found";
-    }
-
-    if (_shtPresent && _shtPresent && _shtPresent)
-    {
-        doc["ALL"]["temperature"]["value"] = (readings.shtTemperature + readings.ahtTemperature + readings.bmpTemperature) / 3;
-    }
-    else
-    {
-        doc["ALL"]["temperature"]["value"] = 0;
-    }
-    doc["ALL"]["temperature"]["unit"] = "°C";
-
-    doc["timestamp"] = readings.timestampMs;
+    doc["datetime"] = readings.timestampMs;
+    doc["timestamp"] = time;
 
     String json;
     serializeJsonPretty(doc, json);
     return json;
-}
-
-String SensorHub::getSensorsInfoJson() const
-{
-    return toJson();
 }

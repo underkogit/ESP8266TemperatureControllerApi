@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <ArduinoJson.h>
+
 class WebServerWrapper
 {
 private:
@@ -23,6 +24,9 @@ private:
 
 public:
     WebServerWrapper(int port = 80) : server(port) {}
+  
+
+   
 
     void on(const char *path, HTTPMethod method, ESP8266WebServer::THandlerFunction handler)
     {
@@ -115,7 +119,6 @@ public:
     void begin()
     {
         server.begin();
-       
     }
 
     void handleClient()

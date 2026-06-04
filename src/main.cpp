@@ -11,15 +11,16 @@ Adafruit_AHTX0 aht;
 Adafruit_BMP280 bmp280;
 SensorHub sensorHub(SDA_PIN, SCL_PIN);
 
+DateTimeProvider dtProvider;
 void connetedWiFi()
 {
-  Serial.println("=== ESP32-C3 WEB SERVER ===");
+  Serial.println("=== WEB SERVER ===");
   Serial.print("Connecting to Wi-Fi...");
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
   unsigned long start = millis();
-  const unsigned long timeout = 20000; // 20 s
+  const unsigned long timeout = 20000;
   while (WiFi.status() != WL_CONNECTED && millis() - start < timeout)
   {
     Serial.print('.');
@@ -35,15 +36,17 @@ void connetedWiFi()
   else
   {
     Serial.println();
-    Serial.println("✗ Failed to connect to Wi-Fi.");
+    Serial.println("Failed to connect to Wi-Fi.");
     Serial.print("Status: ");
-    Serial.println(WiFi.status()); // выведет код состояния (6 = WL_CONNECT_FAILED и т.п.)
+    Serial.println(WiFi.status());
   }
 }
 void initServer()
 {
   webServer.on("/api/sensors", HTTP_GET, []
-               { webServer.sendJson(200, sensorHub.toJson()); });
+               { 
+                  dtProvider.update();
+                webServer.sendJson(200, sensorHub.toJson(dtProvider.getDateTimeString("-", ":"))); });
   webServer.on("/api/status", HTTP_GET, []
                {
                  {
@@ -68,19 +71,19 @@ void setup()
   initServer();
 
   sensorHub.begin();
-
+  if (dtProvider.begin("ru.pool.ntp.org", 10800, 3600000))
+  {
+    Serial.println("DateTimeProvider initialized successfully");
+  }
+  else
+  {
+    Serial.println("DateTimeProvider initialization failed!");
+  }
   webServer.printRoutes(WiFi.localIP());
 }
 
 void loop()
 {
-  int v = analogRead(A0);
-  static int minV = 1023, maxV = 0;
-  if (v < minV)
-    minV = v;
-  if (v > maxV)
-    maxV = v;
-  Serial.printf("ADC=%d V=%.3f min=%d max=%d\n", v, v * (3.3 / 1023.0), minV, maxV);
-  delay(100);
+
   webServer.handleClient();
 }

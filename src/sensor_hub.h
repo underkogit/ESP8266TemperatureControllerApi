@@ -49,9 +49,8 @@ public:
   SensorStatus getBMPStatus() const;
 
   // JSON вывод
-  String toJson() const;
-  String getSensorsInfoJson() const;
-
+  String toJson( String time ) const;
+  
   // Проверка наличия датчиков
   bool isSHTPresent() const { return _shtPresent; }
   bool isAHTPresent() const { return _ahtPresent; }
