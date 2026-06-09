@@ -24,9 +24,6 @@ private:
 
 public:
     WebServerWrapper(int port = 80) : server(port) {}
-  
-
-   
 
     void on(const char *path, HTTPMethod method, ESP8266WebServer::THandlerFunction handler)
     {
@@ -41,6 +38,38 @@ public:
         server.sendHeader("Content-Type", "application/json; charset=utf-8");
         server.sendHeader("Access-Control-Allow-Origin", "*");
         server.send(code, "application/json", json);
+    }
+    void sendHtml(int code, const String &text)
+    {
+
+        server.send(code, "text/html", text);
+    }
+    void send(int code, const char *content_type, const String &text)
+    {
+
+        server.send(code, content_type, text);
+    }
+    void send_P(int code, const char *content_type, const uint8_t *content, size_t contentLength)
+    {
+        // Отправляем заголовки
+        server.sendHeader("Content-Length", String(contentLength));
+        server.sendHeader("Content-Type", content_type);
+        server.setContentLength(contentLength);
+
+        // Начинаем ответ
+        server.send(code, content_type, "");
+
+        // Отправляем бинарные данные по частям
+        const size_t chunkSize = 1024;
+        uint8_t buffer[chunkSize];
+
+        for (size_t i = 0; i < contentLength; i += chunkSize)
+        {
+            size_t len = min(chunkSize, contentLength - i);
+            memcpy_P(buffer, content + i, len);
+            // Отправляем как бинарные данные, НЕ как строку
+            server.sendContent((const char *)buffer, len);
+        }
     }
 
     void printRoutes(IPAddress ip)
