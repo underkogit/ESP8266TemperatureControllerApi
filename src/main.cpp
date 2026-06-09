@@ -48,6 +48,11 @@ void initServer()
     dtProvider.update();
     webServer.sendJson(200, sensorHub.toJson(dtProvider.getDateTimeString("-", ":"))); });
 
+  webServer.on("/api/sensors_array", HTTP_GET, []
+               { 
+    dtProvider.update();
+    webServer.sendJson(200, sensorHub.temperatureArraysToJson(dtProvider.getTimeOffset())); });
+
   webServer.on("/icons/icon-512.png", HTTP_GET, []()
                { webServer.send_P(200, "image/png", icon512, sizeof(icon512)); });
 

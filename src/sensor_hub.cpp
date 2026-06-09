@@ -15,6 +15,7 @@ SensorHub::SensorHub(int sda, int scl)
       _bmpAddr(""),
       _lastReadTime(0)
 {
+    _tempArray = FloatArray(100);
 }
 
 bool SensorHub::begin()
@@ -122,6 +123,21 @@ SensorReadings SensorHub::readAll()
     _readSHT31(readings);
     _readAHT(readings);
     _readBMP280(readings);
+
+    // if (_isValidTemperature(readings.shtTemperature))
+    // {
+    //     _tempArray.addSHT(readings.shtTemperature);
+    // }
+
+    // if (_isValidTemperature(readings.ahtTemperature))
+    // {
+    //     _tempArray.addAHT(readings.ahtTemperature);
+    // }
+
+    // if (_isValidTemperature(readings.bmpTemperature))
+    // {
+    //     _tempArray.addBMP(readings.bmpTemperature);
+    // }
 
     _lastReadings = readings;
     _lastReadTime = millis();
@@ -251,13 +267,53 @@ String SensorHub::toJson(String time) const
             doc["sensors"][name]["pressure"]["unit"] = "гПа";             \
         }                                                                 \
     }
-
-    SET_SENSOR("sht31", _shtPresent, readings.shtTemperature, readings.shtHumidity, NAN);
-    SET_SENSOR("aht20", _ahtPresent, readings.ahtTemperature, readings.ahtHumidity, NAN);
-    SET_SENSOR("bmp280", _bmpPresent, readings.bmpTemperature, NAN, readings.bmpPressure);
+    float ff = 0.0;
+    if (((readings.shtTemperature + readings.ahtTemperature + readings.bmpTemperature) / 3) > 0)
+    {
+        ff = 5;
+    }
+    SET_SENSOR("sht31", _shtPresent, readings.shtTemperature - ff, readings.shtHumidity, NAN);
+    SET_SENSOR("aht20", _ahtPresent, readings.ahtTemperature - ff, readings.ahtHumidity, NAN);
+    SET_SENSOR("bmp280", _bmpPresent, readings.bmpTemperature - ff, NAN, readings.bmpPressure);
 
     doc["datetime"] = readings.timestampMs;
     doc["timestamp"] = time;
+
+    String json;
+    serializeJsonPretty(doc, json);
+    return json;
+}
+
+FloatArray SensorHub::getTemperatureArray()
+{
+    return _tempArray;
+}
+String SensorHub::temperatureArraysToJson(long timeOffset)
+{
+    JsonDocument doc;
+
+    int maxSize = max(_tempArray.sizeSHT(), max(_tempArray.sizeAHT(), _tempArray.sizeBMP()));
+
+    for (int i = 0; i < maxSize; i++)
+    {
+        JsonObject timestamp = doc["timestamps"][i];
+        timestamp["time"] = timeOffset + i;
+
+        if (i < _tempArray.sizeSHT())
+        {
+            timestamp["sht31"]["temperature"] = _tempArray.getSHT(i);
+        }
+
+        if (i < _tempArray.sizeAHT())
+        {
+            timestamp["aht20"]["temperature"] = _tempArray.getAHT(i);
+        }
+
+        if (i < _tempArray.sizeBMP())
+        {
+            timestamp["bmp280"]["temperature"] = _tempArray.getBMP(i);
+        }
+    }
 
     String json;
     serializeJsonPretty(doc, json);

@@ -5,7 +5,7 @@
 #include "Adafruit_SHT31.h"
 #include <Adafruit_AHTX0.h>
 #include <Adafruit_BMP280.h>
-
+#include "FloatArray.h"
 struct SensorReadings
 {
   float shtTemperature;
@@ -47,10 +47,11 @@ public:
   SensorStatus getSHTStatus() const;
   SensorStatus getAHTStatus() const;
   SensorStatus getBMPStatus() const;
-
+  FloatArray getTemperatureArray();
+  String temperatureArraysToJson(long timeOffset);
   // JSON вывод
-  String toJson( String time ) const;
-  
+  String toJson(String time) const;
+
   // Проверка наличия датчиков
   bool isSHTPresent() const { return _shtPresent; }
   bool isAHTPresent() const { return _ahtPresent; }
@@ -60,7 +61,7 @@ private:
   // Конфигурация
   int _sdaPin;
   int _sclPin;
-
+  FloatArray _tempArray;
   // Экземпляры датчиков
   Adafruit_SHT31 _sht;
   Adafruit_AHTX0 _aht;
