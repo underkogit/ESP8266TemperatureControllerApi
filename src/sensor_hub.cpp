@@ -1,6 +1,33 @@
 #include "sensor_hub.h"
 #include <Wire.h>
 
+#define SET_SENSOR(name, present, temp, hum, press)                       \
+    if (!present)                                                         \
+        doc["sensors"][name]["error"] = #name " not found";               \
+    else                                                                  \
+    {                                                                     \
+        if (!isnan(temp))                                                 \
+        {                                                                 \
+            doc["sensors"][name]["temperature"]["value"] = temp;          \
+            doc["sensors"][name]["temperature"]["unit"] = "°C";           \
+        }                                                                 \
+        else                                                              \
+            doc["sensors"][name]["temperature"]["error"] = "read failed"; \
+        if (!isnan(hum))                                                  \
+        {                                                                 \
+            doc["sensors"][name]["humidity"]["value"] = hum;              \
+            doc["sensors"][name]["humidity"]["unit"] = "%";               \
+        }                                                                 \
+        else                                                              \
+            doc["sensors"][name]["humidity"]["error"] = "read failed";    \
+        if (!isnan(press))                                                \
+        {                                                                 \
+            doc["sensors"][name]["pressure"]["value"] = press;            \
+            doc["sensors"][name]["pressure"]["unit"] = "гПа";             \
+        }                                                                 \
+    }
+
+
 SensorHub::SensorHub(int sda, int scl)
     : _sdaPin(sda),
       _sclPin(scl),
@@ -124,21 +151,6 @@ SensorReadings SensorHub::readAll()
     _readAHT(readings);
     _readBMP280(readings);
 
-    // if (_isValidTemperature(readings.shtTemperature))
-    // {
-    //     _tempArray.addSHT(readings.shtTemperature);
-    // }
-
-    // if (_isValidTemperature(readings.ahtTemperature))
-    // {
-    //     _tempArray.addAHT(readings.ahtTemperature);
-    // }
-
-    // if (_isValidTemperature(readings.bmpTemperature))
-    // {
-    //     _tempArray.addBMP(readings.bmpTemperature);
-    // }
-
     _lastReadings = readings;
     _lastReadTime = millis();
 
@@ -242,39 +254,10 @@ String SensorHub::toJson(String time) const
 
     JsonDocument doc;
 
-#define SET_SENSOR(name, present, temp, hum, press)                       \
-    if (!present)                                                         \
-        doc["sensors"][name]["error"] = #name " not found";               \
-    else                                                                  \
-    {                                                                     \
-        if (!isnan(temp))                                                 \
-        {                                                                 \
-            doc["sensors"][name]["temperature"]["value"] = temp;          \
-            doc["sensors"][name]["temperature"]["unit"] = "°C";           \
-        }                                                                 \
-        else                                                              \
-            doc["sensors"][name]["temperature"]["error"] = "read failed"; \
-        if (!isnan(hum))                                                  \
-        {                                                                 \
-            doc["sensors"][name]["humidity"]["value"] = hum;              \
-            doc["sensors"][name]["humidity"]["unit"] = "%";               \
-        }                                                                 \
-        else                                                              \
-            doc["sensors"][name]["humidity"]["error"] = "read failed";    \
-        if (!isnan(press))                                                \
-        {                                                                 \
-            doc["sensors"][name]["pressure"]["value"] = press;            \
-            doc["sensors"][name]["pressure"]["unit"] = "гПа";             \
-        }                                                                 \
-    }
-    float ff = 0.0;
-    if (((readings.shtTemperature + readings.ahtTemperature + readings.bmpTemperature) / 3) > 0)
-    {
-        ff = 5;
-    }
-    SET_SENSOR("sht31", _shtPresent, readings.shtTemperature - ff, readings.shtHumidity, NAN);
-    SET_SENSOR("aht20", _ahtPresent, readings.ahtTemperature - ff, readings.ahtHumidity, NAN);
-    SET_SENSOR("bmp280", _bmpPresent, readings.bmpTemperature - ff, NAN, readings.bmpPressure);
+
+    SET_SENSOR("sht31", _shtPresent, readings.shtTemperature, readings.shtHumidity, NAN);
+    SET_SENSOR("aht20", _ahtPresent, readings.ahtTemperature, readings.ahtHumidity, NAN);
+    SET_SENSOR("bmp280", _bmpPresent, readings.bmpTemperature, NAN, readings.bmpPressure);
 
     doc["datetime"] = readings.timestampMs;
     doc["timestamp"] = time;
