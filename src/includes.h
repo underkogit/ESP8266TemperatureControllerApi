@@ -14,4 +14,5 @@
 #include "DateTimeProvider.h"
 #include "wifi_config.h"
 #include "indexhtml.h"
-#include "manifest.h"
+// #include "manifest.h"
+// #include "sw.h"

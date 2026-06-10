@@ -41,8 +41,11 @@ void initServer()
 {
   webServer.on("/", HTTP_GET, []
                { webServer.sendHtml(200, index_html); });
-  webServer.on("/manifest.json", HTTP_GET, []
-               { webServer.send(200, "application/json", index_maniest); });
+  // webServer.on("/manifest.json", HTTP_GET, []
+  //              { webServer.send(200, "aplication/manifest+json", index_maniest); });
+  // webServer.on("/sw.js", HTTP_GET, []
+  //              { webServer.send(200, "text/javascript", index_sw_js); });
+
   webServer.on("/api/sensors", HTTP_GET, []
                { 
     dtProvider.update();
@@ -53,17 +56,17 @@ void initServer()
     dtProvider.update();
     webServer.sendJson(200, sensorHub.temperatureArraysToJson(dtProvider.getTimeOffset())); });
 
-  webServer.on("/icons/icon-512.png", HTTP_GET, []()
-               { webServer.send_P(200, "image/png", icon512, sizeof(icon512)); });
+  // webServer.on("/icons/icon-512.png", HTTP_GET, []()
+  //              { webServer.send_P(200, "image/png", icon512, sizeof(icon512)); });
 
-  webServer.on("/icons/icon-512.png", HTTP_GET, []()
-               { webServer.send_P(200, "image/png", icon512, sizeof(icon512)); });
+  // webServer.on("/icons/icon-512.png", HTTP_GET, []()
+  //              { webServer.send_P(200, "image/png", icon512, sizeof(icon512)); });
 
-  webServer.on("/icons/icon-192.png", HTTP_GET, []()
-               { webServer.send_P(200, "image/png", icon192, sizeof(icon192)); });
+  // webServer.on("/icons/icon-192.png", HTTP_GET, []()
+  //              { webServer.send_P(200, "image/png", icon192, sizeof(icon192)); });
 
-  webServer.on("/icons/icon-192.png", HTTP_GET, []()
-               { webServer.send_P(200, "image/png", icon192, sizeof(icon192)); });
+  // webServer.on("/icons/icon-192.png", HTTP_GET, []()
+  //              { webServer.send_P(200, "image/png", icon192, sizeof(icon192)); });
 
   webServer.on("/api/status", HTTP_GET, []
                {
